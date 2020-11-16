@@ -1,0 +1,479 @@
+---
+title: "Project 2 Turn In"
+author: "Alberto Liu"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document:
+    code_folding: show
+    csl: biomed-central.csl
+    df_print: paged
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 7
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_float: yes
+   
+  word_document:
+    toc: yes
+    toc_depth: 4
+  pdf_document:
+    df_print: kable
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 7
+    highlight: tango
+    toc: yes
+    toc_depth: 4
+bibliography: bibliography_stat.bib
+abstract: This project aims to determine what stats to focus on for bastketball teams in order to achieve the most amount of wins possible through the method of multiple linear regression. Specificly, we are looking on what to focus on during offenese, so only offensive stats will be studied in this project.
+---
+
+```{r setup}
+library(knitr)
+#knitr::knit_hooks$set(webgl = hook_webgl)
+#knit_hooks$set(webgl = hook_webgl)
+knitr::opts_chunk$set(echo = TRUE, comment = "AL")
+```
+
+<center>
+![Me](Alberto.Liu.jpg){width = 40%}
+</center>
+
+# Introduction
+
+  When the coronavirus spread to the USA, the National Basketball Association (NBA) was in the middle of it's 2019-2020 season. The season was immediately suspended until further notice when Rudy Gobert, a player for the Salt Lake City NBA team, tested positive for Covid-19. However, talks surfaced about a potential "bubble environment" that could completely isolate the teams to continue to play without having to worry about the possibility of being infected. So on July 7th, 22 teams were invited to participate to continue playing against each other in DisneyWorld and resulted in one of the most *magical* seasons ever played.
+  
+  Even though there were many top teams playing, only 1 can be crowned champion at the end of the season, but is there a way that we can somehow predict who will be the champion based off of how well/bad a team performed in the regular season? Therefore, this project will attempt to look at a **model with variables to see what variables can best be used to model how well a team will succeed.**
+  
+  
+  
+<center>
+![NBA logo](nba_logo.jpg){ width=40% }
+
+</center>  
+  
+# Video of presentation
+
+<video width="320" height="240" controls>
+  <source src="Project 2 recording.mp4" type="video/mp4">
+</video>
+
+## Variables {.tabset .tabset-pills .tabset-fade}
+
+First let's read in the data to see what variables we will be working with. More specifically, we will be looking at the variables that are taken from game to game for each individual team and that are recorded when a team is on **OFFENCE**.
+
+```{r}
+#reading in the data
+library(readxl)
+NBA = read_xlsx("C:/OU/Math 4773/Projects/Project 2/NBA team stat.xlsx")
+names(NBA)
+```
+
+The variables that we will be looking at closely are:
+
+### TEAM
+
+**Team:** the name of the NBA team you are looking at. (qualitative)
+
+![The NBA teams](nba teams.png)
+
+### 3P
+
+**3P:** The total number of *3 pointers* made by a team per game, a successful shot that is shot behind an arc called the "3 point line." (quantitative)
+
+<center>
+![Jeremy Lin scoring a 3 pointer](Jeremy_points.gif)
+
+### 2P
+
+**2P:** The total number of *2 pointers* made by a team per game, any successful shot *inside* the 3 point line. (quantitative)
+
+![2 pointer dunk](Dunk Lavine.gif) ![2 pointer midrange shot](midranger kyrie.gif)
+
+### FT
+
+**FT:** The total number of *Free throws* made by a team per game, a 1 point shot that is given to a player after being fouled. A free throw is taken at the "free throw line" located 15-feet (4.572 meters).   (quantitative)
+
+<center>
+![an underhanded free throw](free throw.gif)
+</center>
+
+### ORB
+
+**ORB** The total number of *offensive rebounds* by a team per game. An offensive rebound occurs when an offensive player grabs the basketball off of a missed shot by himself or a teammate and has possession. (quantitative)
+
+![offensive rebound by Marcus Smart off a missed free throw by his teammate](offensive rebound marcus smart.gif)
+
+### AST
+
+**AST:** The total number of *assists* made by a team per game. An assist is given when a player passes to his teammate and the teammate scores. Only the teammate that passed the ball which lead to a 2/3 pointer will get counted for the assist, all prior passes will not count as extra assists. (quantitative)
+
+<center>
+
+![Assist by Russel Westbrook to Andre Robinson](Assist westbrook.gif)
+</center>
+
+### W
+**W:** The total number of **wins** a team had at the end of the regular season (quantitative)
+
+<center>
+![This years NBA champions, the Los Angeles Lakers!](Wins laker.jpg)
+
+## How were the variables collected?
+
+During each seasonal NBA game, each before-mention variables are collected game-to-game and then averaged over during the 82 game season. 
+
+## Why is the data collected
+
+The NBA is a global phenomenon drawing millions of both viewers and revenue each season. These statistics can be seen one way as "how do we keep the NBA more interesting so we can profit off the market of entertainment more?' But the more logistical, and the one this project is based on, is how one NBA team can get an edge over the others by studying their strengths and weaknesses through statistics.
+
+### What is my interest in the data?
+
+I want to see what variables contribute the most to a team, so I can hopefully better gain analysis skills to one day work for one of the 30 NBA teams and help them win a championship through the game of statistics.
+
+## Research question:
+
+With so many variables and different focuses during a basketball game, I want to narrow down what NBA teams should focus on in order to win the most amount of games possible. That is to say, **I want to look at what variables will lead have the greatest effect on the number of wins NBA teams achieve.**
+
+## Ploting the data {.tabset .tabset-fade}
+
+These plots will be the variables vs W
+
+### 3P 3 Pointer plot
+
+```{r}
+library(ggplot2)
+g = ggplot(data = NBA, aes(x = `3P` , y = W), main = "3 pointers")+geom_point()
+
+g = g + geom_smooth(method = "loess") + geom_text(aes(label=Team),hjust=0, vjust=1)
+g
+```
+
+This is a plot of 3 pointers per game vs the number of wins a team got.
+
+### 2P 2 Pointer plot 
+
+```{r}
+g = ggplot(data = NBA, aes(x= `2P`,y = W), main = "2 Pointers") + geom_point()
+g = g + geom_smooth(method = "loess") + geom_text(aes(label=Team),hjust=0, vjust=1)
+g
+```
+
+This plot plots the number of 2 pointers per game to the number of wins for each of the 30 NBA teams.
+
+### FT Free Throw
+
+```{r}
+g = ggplot(data = NBA, aes(x= FT,y = W), main = "FT") + geom_point()
+g = g + geom_smooth(method = "loess") + geom_text(aes(label=Team),hjust=0, vjust=1)
+g
+```
+
+This is the number of Free throws per game vs the number of wins for each of the 30 teams.
+
+### RB Rebound plot 
+
+```{r}
+g = ggplot(data = NBA, aes(x= ORB,y = W), main = "RB") + geom_point()
+g = g + geom_smooth(method = "loess") + geom_text(aes(label=Team),hjust=0, vjust=1)
+g
+```
+
+This is the number of offensive rebounds vs wins for each of the 30 teams in the NBA
+
+### AST Assist plot
+
+```{r}
+g = ggplot(data = NBA, aes(x= AST,y = W), main = "Assists") + geom_point()
+g = g + geom_smooth(method = "loess") + geom_text(aes(label=Team),hjust=0, vjust=1)
+g
+```
+
+This is a plot of the number of assists per game a team has vs the number of wins.
+
+# Theory behind MLR {.tabset}
+
+Below are 3 important proofs/theories around MLR
+
+## General formula
+
+In a simple linear model, we see that $E(Y|X=x) = \beta_0 + \beta_1x_1$. Now lets say that Y is a set of cases $Y_1,Y_2...Y_n$ independent reponse values of Y. Then the formula for the simple linear model will be: $Y_i = E(Y_i|X_i=x_i) = \beta_0 + \beta_1x_i + \epsilon_i$. Then if we add on each of the trails on, then our formula will transform into $E(Y|X_1) = x_1, X_2 = x_2,...X_p = x_p) = \beta_0 + \beta_1x_1 + \beta_2x_2 +...+\beta_px_p$ [@Sheather]
+
+## RSS to calculate $\hat{\beta}$ 
+
+RSS can be written in the matrix form of the function for $\beta$ as: $RSS(\beta) = (Y-\hat{Y{}})^T(Y-\hat{Y})$ Because $Y = X\beta+\epsilon$ we will then plug the value of Y into the RSS equation. $$RSS= (X\beta+\epsilon - X\hat{\beta}+\epsilon)^T(X\beta+\epsilon-X\hat{\beta}+\epsilon)$$ 
+
+Now apply the transpose seen in the first term remembering the transpose rule of $(AB)^T = B^TA^T$, then we will get $$Y^TY + (X\beta)^TX\beta - Y^TX\beta - (X\beta)^TY \implies Y^TY + \beta^T(X^TX)\beta-2Y^TY\beta$$
+
+From here, we see that the $\epsilon$s cancel quite nicely and we are just left with $(X\beta - X\hat{\beta})^T(X\beta-X\hat{\beta})$[@Stanfordstat]
+
+Now to minimum, we need to take the derivative with respect to $\beta$, which will give us: $-2X^Ty+2X^TX\hat{\beta}=0$ [@Stanfordstat]
+
+Now we can solve for $\hat{\beta}$ and we get the following:
+$$2X^TX\hat{\beta} = 2X^Ty \implies X^TX\hat{\beta} = X^Ty$$
+multiply by the inverse to get $\hat{\beta}$ by itself
+
+$$\hat{\beta} = (X^TX)^{-1}X^Ty$$ [@louisvillestat]
+
+## Visual aide
+
+Here is some visual aide to help with the idea of linear regression. Since we are now using vectors and matrices, imagine we have a hyper-space and we want to see a visual representation of $Y = X\beta+\epsilon$ then we would get a picture such as the following 
+
+<center>
+![a rough visual aide](Capture.PNG){ width=40% }
+
+</center>
+
+As we can see the Blue line is the Y vector of our responses, and the Green and Pink vectors are $\hat{\epsilon}$ & $X\beta$ respectively. The red lines are orthogonal vectors to $\hat{\epsilon}$ and represent $x\beta$ & $\epsilon$ in the hyper-plane
+
+# Model selection {.tabset .tabset-fade}
+
+From the before mentioned variables, the **FULL** model I have in mind right now will look something like $E(Y_{Wins}) = \beta_0 + \beta_1x_{3p} + \beta_2x_{2p} + \beta_3x_{FT} +\beta_4x_{ORB} + \beta_5x_{AST} + \beta_6x_{3p}x_{2p}$
+
+
+```{r}
+#the full model
+nba.lm = lm(W ~`3P` + `2P` + FT + ORB + AST + `3P`*`2P`,data = NBA)
+```
+
+
+
+## Using the lm() function and interprettying summary output
+
+```{r}
+summary(nba.lm)
+```
+From the summary output, we can see that the full model **is not** a good model to model our response variable *number of wins* due to the low multiple $R^2$ of a small 0.4293 (about 43% of the variable is explained by this model) and a much smaller $R^2_a$ of 02804, meaning it does not count for any of the complexity of our model
+
+However, P-value of the F-statistic shows that the model is **adequate** at the $\alpha$ level of 0.05, meaning that at least one of the parameters (independent variables) $\neq 0$
+
+It also is not very clear what parameters we should keep/remove due to the high P-values from each parameter. We will use the AIC next to see what our final model is supposed to look like, because we can't seem to get it from the raw summary output.
+
+
+
+## Using AIC
+
+```{r}
+step(nba.lm,direction = "backward")
+```
+
+From the AIC step function, we can see that the final model that we should be using will only include **3 Pointers, 2 Pointers, and Total Rebounds.** This means that the model that only has 3 pointers, 2 pointers and total rebounds is the model that is the "closest" to the true model.
+
+
+## Final model
+
+Now lets make an object that stores the improved and FINAL model that we will be using for the rest of our analysis.
+
+```{r}
+#the final model
+nba.lm.reduced = lm(W ~ `3P` + `2P` + ORB, data = NBA)
+summary(nba.lm.reduced) #summary output of our final model
+```
+
+## Anova test
+
+```{r}
+anova(nba.lm.reduced,nba.lm)
+```
+
+We can see from the anova analysis that the extra terms (terms not in the nested model) has a P-value greater than 0.05, we will accept the NULL as plausible that the $\beta$ terms that are not nested = 0, meaning $\beta_3 = \beta_5 = \beta_6 = 0$ [@UXthroughdata]
+
+
+
+
+## What do the point estimates mean from our formula?
+
+From the final reduced formula that we got from the step() function, we get our point estimates to be: $$\beta_0 = -118.512$$
+$$\beta_1 = 6.285$$ $$\beta_2 = 4.197$$ (meaning for every unit, every 3 pointer will be increased by 6.285 and every 2 pointer will be increased by 4.197)
+
+and $$\beta_4 = -4.257$$ (meaning for every unit of an offensive rebound, it will decrease by 4.257) 
+
+# Checking validity
+
+Remember that MLR takes on the 4 assumptions of:
+
+1. Errors have a mean of 0
+2. The errors have a constant variance of $I\sigma^2$
+3. $\epsilon$ ~ $N_n$
+4. Errors are iid (independent from each other)
+
+## Shapiro-Wilk test
+
+```{r}
+library(s20x)
+normcheck(nba.lm.reduced, shapiro.wilk = T)
+```
+
+From the Shapiro-Wilks test, we see that we have a very normal looking distribution judging from the large P-value. This means that we can accept the NULL as plausible and say that the errors for our data take a normal distribution. This means that assumption number 3 is checked off.
+
+
+## Residual VS Fitted
+
+```{r}
+nba.res = residuals(nba.lm.reduced)
+nba.fit = fitted(nba.lm.reduced)
+
+trendscatter(nba.res~nba.fit, f = 0.5, data = nba.lm.reduced, xlab="Fitted Values",ylab="Residuals", main="Residual vs Fitted Value")
+```
+
+There seems to be a very loose symmetry about the residuals = 0. Although we have a general band that seems to be close to Y = 0, there does seem to be some outliers in our graph meaning that we have assumption 1 checked off.
+
+We can also see that there is no real *patern* appearing within this graph, so it looks like there is a constant variance fulling assumption number 2.
+
+
+## Independence in the data
+
+Because this isn't a time series, we will have to see how the "experiment" was set up to prove that it is independent. Because every regular season game has no effect on the games before and after it, we know that 1 game does not depend on the game before/after it. Therefore, we can say that the data here is independent and fulfills the final assumption that are associated with MLR that our errors are independent.
+
+
+# Checking confidence intervals
+
+```{r}
+ciReg(nba.lm.reduced)
+```
+
+As we can see, we can say with 95% confidence that the true underlining means for the following variables of our reduced models are: 
+**3 Pointer: 2.61365           9.95611**
+**2 Pointer: 1.39474           7.00003**
+**Offensive Rebounds: -8.73519 0.22177**
+
+# using Predict()
+
+
+```{r}
+predict(nba.lm.reduced) 
+
+#length(NBA$ORB)
+#length(NBA$`3P`)
+#length(NBA$`2P`)
+```
+
+As we can see, when we call the predict() function, it returns the number of wins each of the 30 teams are predicted to have (point estimates).
+
+Notably, the our hometown favorites, the OKC Thunder number 21 from the above output, are predicted to win about 36 games with it's values of 3 Pointers, 2 pointers and offensive rebounds.
+
+# Regression plane 
+
+## Regression plane with 2 pointers and 3 pointers with ORB = 0
+
+```{r, webgl=TRUE }
+#library(rockchalk)
+library(plotly)
+#library(scatterplot3d)
+
+nba.3p.2p = lm(W ~`3P` + `2P` , data = NBA)
+Three.pointers = NBA$`3P`
+Two.Pointers = NBA$`2P`
+
+#scatterplot3d(x = Three.pointers, y = Two.Pointers, z = NBA$W,angle = 45 )
+
+#plot3d(x=Three.pointers, y=Two.Pointers, z=NBA$W, type="s", col="yellow", size=1)
+#planes3d(a=coef(nba.3p.2p)[2], b=coef(nba.3p.2p)[3], c=-1, d=coef(nba.3p.2p)[1], alpha=.5)
+
+x <- seq(8, 18, by = 2)
+y <- seq(12, 32, by = 4)
+plane <- outer(x, y, function(a, b){nba.3p.2p$coef[1] + 
+    nba.3p.2p$coef[2]*a + nba.3p.2p$coef[3]*b})
+
+plot_ly(data = NBA, z = ~W, x = ~Three.pointers, y = ~Two.Pointers, opacity = 0.5) %>%
+  add_markers() %>%
+  add_surface(x = ~x, y = ~y, z = ~plane, showscale = FALSE)
+
+  
+```
+
+
+
+This is probably the most interesting regression plane to study, because (excluding the free throw) every shot from a live ball in play will either be a 3 pointer or a 2 pointer. This regression plane idea was taken from [@regression_plane]
+
+Notice that the residuals are not that far off from the plane, meaning that the quantity associated with the error should be small (and hopefully near 0 when we sum them)
+
+```{r}
+sum(nba.lm.reduced$residuals)
+```
+^^^ Notice how when we summed our residuals, it provides a number very close (pretty much) equal to 0! [@oustat]
+
+# Checking for outliers with Cooks plot
+
+```{r}
+cooks20x(nba.lm.reduced)
+```
+
+## What to conclude from cooks plot
+
+we see that we have observation 14 as a main outlier because the cooks distance is near 0.133 (4/n as a way to detect outliers for cooks distance)[@cooksdistance], so we will remove the 14th observation from our data set. This 14th observation may have been having too much of an impact on our data set since it has such a large value for cooks distance [@Gao]
+
+### New dataset without 14th observation
+
+```{r}
+nba_new.lm=lm(W~`3P` + `2P` + ORB, data=NBA[-c(14),])
+summary(nba_new.lm)
+```
+
+We observe that our P-value related to our F-statistic got "better" going from 
+
+**0.003383 to 0.003099**, giving us **more** evidence to reject the NULL hypothesis and say that the (new) model has even better adequacy.
+
+# Conclusion
+
+An NBA game can have may different variables that can help a team excel on offense end. Now, we can see what offensive stat teams should be focusing on if they are wanting to win as many games as possible in order to qualify for the playoffs in the spring. 
+
+## Answer to research question
+
+Before, I posed the research question, *what stats should teams focus on offense in order to achieve the most wins in the regular season.* Now with our model, the answer to that question is: Teams should be focused on **3 pointers, 2 pointers and offensive rebounds** during offense for the most wins possible. 
+
+## Ways to improve model
+
+Just like anything in life, there are a number of ways this experiment can be improved upon. 
+
+### Variance inflation
+
+One variable that caught my eye from the final model that had an odd coefficient was the ORB (offensive rebound), which had a value of *-4.257*. This is surprising because usually, when a team gets an offensive rebound, they will have another change to score points when they failed. Which would lead us to believe that it should be a **POSITIVE** coefficient because it will help them lead to more points, and lead them to more wins. There are 2 reasons why I think the coefficient is negative:
+
+>1. There is some sort of dependence between 3 pointers and/or 2 Pointers leading to some inflation
+
+>2. When a team gets an offensive rebound, it disrupts the pace of the game, because most teams have a *realistic* mindset. Meaning if the player/teammate misses his/her shot, then the team should switch their mindset to how they will defend the opposing team. If they get an offensive rebound, they might not know what set play to run, leading to a turnover (meaning the opponent has a free break-away to the basket) because players aren't on the same page (from personal expierence).
+
+>   2.5 When players are scrambling for an offensive rebound, many times refrees will call a *loose ball foul* which sets the offensive team behind and penalizes them for scrambling for the ball if the refree deems the offensive player to be too rough while chasing the rebound (from personal experience).
+
+Because only 1 of the above reasons can be quantified, we will attempt to see if there is some sort of multi-collinearity/ dependence between the variables, specifically around `Offensive Rebounds.`
+
+### Variance inflation test
+
+```{r}
+car::vif(nba.lm.reduced)
+
+```
+
+Since the variance inflation coefficients are very low, we will have to go in-favor of human error being the reason for the negative coefficient.
+
+#### Pairs plot
+
+```{r}
+pairs(W ~ `3P`+`2P`+ORB, data = NBA)
+```
+
+From the pairs plot, we see that we really had no idea what type of *degree* should have been associated with the independent variables of our model, so we can keep using a degree of 1. This gives us even more evidence that Offensive Rebounds has a negative correlation, because we should have the correct degree for it in our model.
+
+### Experimental ways to improve the model 
+
+Like I discussed with the previous experiment in MATH 4753, the NBA is split into 2 conferences: EAST and WEST. Therefore, most years, one conference will always have stronger teams because NBA players tend to shift over to play in more power conferences to have a better change to play for a team that can contend for the championship better. 
+
+This can be seen in this quick calculations for the 2019-2020 season where we take the average number of wins of the top 4 teams from each conference
+
+```{r}
+avg.east.top4 = (45+48+53+56)/4
+avg.west.top4 = (52+49+44+46)/4
+  avg.east.top4
+  avg.west.top4
+```
+notice how the *east* has $\approx$ 3 more wins than the *west.*
+
+A way that we can potentially improve this experiment is that we can limit our observations to only one conference, but then that means that we will be cutting our sample size in half (from 30 teams to 15) and we don't know if we can then apply certain assumptions such as the CLT. One possible solution to this is that within the one conference we are studying, we can look at multiple seasons to increase our sample size. 
+
+We can also try randomized block designs, where each "block" can be a group of 30/n teams. And the treatment can be that each "block" can play another block as it's "treatment," but obviously this has many issues, because teams within the block won't be able to play each other and it will (most likely) completely mess up the NBA's current playoffs being EAST vs WEST oriented due to random teams playing each other, you might get some blocks being weaker than the others, so the playoffs might be skewed this way.
+
+
+# References
